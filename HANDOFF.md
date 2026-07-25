@@ -23,13 +23,16 @@ guide infra/dashboard work, and flag security issues. Assume that role and rhyth
   plan first + wait for "go", tests first, update PROGRESS). SETUP.md = accounts/costs/deploy guide.
 
 ## Current position (update this line as things change)
-**Phase 0 of 8 complete; Phase 1 has begun. Done: FR-FND-01..06 and FR-PUB-00. FR-PUB-00 established the
-shared public design system in `packages/ui`: SSR-first frosted glass; progressively enhanced live-content SVG
-refraction with automatic fallbacks and a three-element budget; DESIGN.md-only motion, light/dark theme, and
-responsive tokens; persisted no-FOUC theming; and a noindex `/design-system` proof route. Tests were written red
-first; the final repository result is 72 passing tests, clean lint/build, and Vercel-preview Lighthouse
-Performance scores of 94, 98, and 97. No FR-PUB-01 page content was built. Next: FR-PUB-01, then FR-PUB-02..06
-and FR-SEO-01.**
+**Phase 0 of 8 complete; Phase 1 has begun. Done: FR-FND-01..06 and FR-PUB-00/00A. The shared public design
+system in `packages/ui` now includes SSR-first frosted glass; progressive live-content SVG refraction with
+automatic fallbacks and a three-element budget; DESIGN.md-only motion, light/dark theme, responsive tokens, and
+the §13 Liquid Glass language; a post-load five-color ambient canvas; GlassNav, GlassButton, and
+GlassSegmentedControl; event-driven pointer specular without an animation-frame loop; real-label roving keyboard
+focus over an aria-hidden/nonfocusable backing copy; and fully static/frosted reduced-motion and low-end paths.
+The noindex `/design-system` proof route is the only content surface. Tests were written red first; the final
+repository result is 86 passing tests, clean lint/build, desktop Lighthouse Performance scores of 99, 97, and
+97, and a desktop accessibility score of 100 with no contrast or aria-hidden-focus failures. No FR-PUB-01 page
+content was built. Next: FR-PUB-01, then FR-PUB-02..06 and FR-SEO-01.**
 
 ## Infrastructure inventory (no credentials here, ever)
 - GitHub org eQOURSE / repo eqourseplus; my admin account bhau23. Node 22.23.1 + pnpm 11.9.0 pinned.
@@ -60,6 +63,11 @@ Free-first cost posture (~₹0 build phase). GCP over AWS (existing billing). Co
 unnumbered work, asks on ambiguity, plans-first, honest PROGRESS gating.
 
 ## Watchlist / open items
+- Flat --primary (170 82% 32%) against white measures 3.76:1 — below AA at 16px/700. Not changed in FR-PUB-00B (system-wide blast radius). FR-PUB-01 CTAs must use the deepened teal plate (hsl(170 82% 26%) to hsl(174 72% 20%)), not flat --primary, for white labels. Recorded in DESIGN.md §13.
+- Dark theme is the stronger liquid-glass surface and is the reference for FR-PUB-01 material quality; light is legitimately quieter (less value range) and that is physics, not a defect.
+- Focal refraction initialises 12 s after an element enters the viewport (POST_LCP_INITIALIZATION_DELAY_MS). Any visual QA or Lighthouse run must scroll into view and wait 15 s, or it measures the frosted fallback. Virtual-time headless screenshots always show frosted.
+- .eq-glass-label-scrim is currently applied to every eyebrow; only the focal-card and hero-lens eyebrows actually need it. Cosmetic tidy-up, deferred.
+- Duplicate Vercel project `eqourseplus` still errors on its unrelated root-output config — delete or fix it.
 - GCP red banner "administrator must verify this account" — I must verify personally (urgent-ish).
 - Vercel 2FA — enable personally if not done.
 - Long-lead accounts to start early (Phase 1–2): RazorpayX/Cashfree company KYC (2–4 wks), IDfy/HyperVerge +
