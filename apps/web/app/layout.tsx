@@ -18,8 +18,33 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://plus.eqourse.com"),
   title: "eQOURSE+",
   description: "The talent platform by eQOURSE.",
+  alternates: {
+    languages: {
+      en: "/",
+      "x-default": "/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    title: "eQOURSE+",
+    description: "The talent platform by eQOURSE.",
+    siteName: "eQOURSE+",
+    locale: "en",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "eQOURSE+",
+    description: "The talent platform by eQOURSE.",
+  },
+  icons: {
+    icon: {
+      url: "/opengraph-image",
+      type: "image/svg+xml",
+    },
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
