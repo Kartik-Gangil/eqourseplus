@@ -126,11 +126,21 @@ describe("FR-PUB-04 vendors page", () => {
         "/",
         "/freelancers",
         "/vendors",
-        "https://eqourse.com",
+        "/about",
+        "https://www.eqourse.com/",
         "https://www.eqourse.com/casestudy",
       ].includes(href);
       expect(href.startsWith("#") || isChromeOrSourceLink, href).toBe(true);
     }
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLAnchorElement>(
+          "#site-navigation .home-nav-links a",
+        ),
+        (link) => link.getAttribute("href"),
+      ),
+    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
   });
 
   it("uses one FAQ source for visible disclosures and matching schema", () => {

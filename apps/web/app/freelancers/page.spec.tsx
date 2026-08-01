@@ -81,9 +81,19 @@ describe("FR-PUB-03 freelancers page", () => {
         href === "/" ||
         href === "/freelancers" ||
         href === "/vendors" ||
-        href === "https://eqourse.com";
+        href === "/about" ||
+        href === "https://www.eqourse.com/";
       expect(href.startsWith("#") || isChromeLink, href).toBe(true);
     }
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLAnchorElement>(
+          "#site-navigation .home-nav-links a",
+        ),
+        (link) => link.getAttribute("href"),
+      ),
+    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
   });
 
   it("uses one FAQ source for visible disclosures and matching schema", () => {

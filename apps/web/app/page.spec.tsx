@@ -112,7 +112,7 @@ describe("FR-PUB-01 home page", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /visit eQOURSE/i }),
-    ).toHaveAttribute("href", "https://eqourse.com");
+    ).toHaveAttribute("href", "https://www.eqourse.com/");
   });
 
   it("uses only crawlable in-page or external links", () => {
@@ -123,10 +123,25 @@ describe("FR-PUB-01 home page", () => {
       expect(
         link.hash.length > 1 ||
           RESOLVING_ROUTES.some((route) => href === route) ||
-          link.href.startsWith("https://eqourse.com"),
+          link.href.startsWith("https://www.eqourse.com/"),
         href,
       ).toBe(true);
     }
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLAnchorElement>(
+          "#site-navigation .home-nav-links a",
+        ),
+        (link) => link.getAttribute("href"),
+      ),
+    ).toEqual([
+      "#how-it-works",
+      "#categories",
+      "/freelancers",
+      "/vendors",
+      "/about",
+    ]);
   });
 
   it("contextually links to both public talent models", () => {
@@ -138,6 +153,10 @@ describe("FR-PUB-01 home page", () => {
     expect(
       screen.getByRole("link", { name: "Explore the vendor agency model" }),
     ).toHaveAttribute("href", "/vendors");
+    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/about",
+    );
   });
 
   it("marks every decorative svg as hidden and every image with alt text", () => {
