@@ -1,5 +1,5 @@
 import { Injectable, Optional } from "@nestjs/common";
-import { connect, connection } from "mongoose";
+import { connect, connection, Types } from "mongoose";
 
 import { DatabaseConnectionService } from "../database/database-connection.service";
 import type {
@@ -77,7 +77,7 @@ export class MongooseAuthStore implements AuthStore {
         "otpChallenge.wrongAttempts": { $lt: maxWrongAttempts },
       },
       { $inc: { "otpChallenge.wrongAttempts": 1 } },
-      { new: true },
+      { returnDocument: "after" },
     ).exec();
     if (
       updated?.otpChallenge &&
@@ -112,9 +112,9 @@ export class MongooseAuthStore implements AuthStore {
     now: Date,
   ): Promise<boolean> {
     await this.ensureConnected();
-    const result = await UserModel.updateOne(
+    const result = await UserModel.collection.updateOne(
       {
-        _id: userId,
+        _id: new Types.ObjectId(userId),
         refreshSessions: {
           $elemMatch: {
             digest: currentDigest,
@@ -123,11 +123,42 @@ export class MongooseAuthStore implements AuthStore {
           },
         },
       },
-      {
-        $set: { "refreshSessions.$.revokedAt": now },
-        $push: { refreshSessions: replacement },
-      },
-    ).exec();
+      [
+        {
+          $set: {
+            refreshSessions: {
+              $concatArrays: [
+                {
+                  $map: {
+                    input: "$refreshSessions",
+                    as: "session",
+                    in: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$$session.digest", currentDigest] },
+                            {
+                              $eq: [
+                                { $type: "$$session.revokedAt" },
+                                "missing",
+                              ],
+                            },
+                            { $gt: ["$$session.expiresAt", now] },
+                          ],
+                        },
+                        { $mergeObjects: ["$$session", { revokedAt: now }] },
+                        "$$session",
+                      ],
+                    },
+                  },
+                },
+                [replacement],
+              ],
+            },
+          },
+        },
+      ],
+    );
     return result.modifiedCount === 1;
   }
 
@@ -173,6 +204,10 @@ export class MongooseAuthStore implements AuthStore {
     return {
       id: user.id,
       email: user.email,
+      ...(user.phone ? { phone: user.phone } : {}),
+      ...(user.phoneVerifiedAt !== undefined
+        ? { phoneVerifiedAt: user.phoneVerifiedAt }
+        : {}),
       roleAssignments: user.roleAssignments.map((assignment) => ({
         role: assignment.role,
         businessUnit: assignment.businessUnit,
