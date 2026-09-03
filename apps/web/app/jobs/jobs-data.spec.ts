@@ -38,7 +38,7 @@ describe("FR-PUB-02 seeded jobs", () => {
       title: job.title,
       description: job.description,
       datePosted: job.datePosted,
-      hiringOrganization: { name: "eQOURSE+" },
+      hiringOrganization: { "@id": "https://plus.eqourse.com/#organization" },
       jobLocationType: "TELECOMMUTE",
     });
     expect(schema.url).toBe(`https://plus.eqourse.com/jobs/${job.slug}`);
