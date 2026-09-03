@@ -80,6 +80,7 @@ describe("FR-PUB-03 freelancers page", () => {
       const isChromeLink =
         href === "/" ||
         href === "/freelancers" ||
+        href === "/jobs" ||
         href === "/vendors" ||
         href === "/about" ||
         href === "https://www.eqourse.com/";
@@ -93,7 +94,7 @@ describe("FR-PUB-03 freelancers page", () => {
         ),
         (link) => link.getAttribute("href"),
       ),
-    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
+    ).toEqual(["/", "/freelancers", "/jobs", "/vendors", "/about"]);
   });
 
   it("uses one FAQ source for visible disclosures and matching schema", () => {

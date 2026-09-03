@@ -14,6 +14,7 @@ const pageSource = readFileSync(
 
 const APPROVED_LINKS = [
   "/",
+  "/jobs",
   "/freelancers",
   "/vendors",
   "/about",
@@ -86,7 +87,7 @@ describe("FR-PUB-06 login page", () => {
         ),
         (link) => link.getAttribute("href"),
       ),
-    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
+    ).toEqual(["/", "/freelancers", "/jobs", "/vendors", "/about"]);
     expect(
       container.querySelector("#site-navigation [aria-current]"),
     ).toBeNull();

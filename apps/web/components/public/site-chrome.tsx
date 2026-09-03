@@ -27,6 +27,7 @@ type SiteNavigationProps = {
     | "home"
     | "freelancers"
     | "vendors"
+    | "jobs"
     | "about"
     | "login"
     | "register";
@@ -81,6 +82,13 @@ export function SiteNavigation({ page }: SiteNavigationProps) {
                 aria-current={page === "freelancers" ? "page" : undefined}
               >
                 For freelancers
+              </a>
+              <a
+                className="home-nav-link"
+                href="/jobs"
+                aria-current={page === "jobs" ? "page" : undefined}
+              >
+                Jobs
               </a>
               <a
                 className="home-nav-link"

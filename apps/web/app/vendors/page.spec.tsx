@@ -125,6 +125,7 @@ describe("FR-PUB-04 vendors page", () => {
       const isChromeOrSourceLink = [
         "/",
         "/freelancers",
+        "/jobs",
         "/vendors",
         "/about",
         "https://www.eqourse.com/",
@@ -140,7 +141,7 @@ describe("FR-PUB-04 vendors page", () => {
         ),
         (link) => link.getAttribute("href"),
       ),
-    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
+    ).toEqual(["/", "/freelancers", "/jobs", "/vendors", "/about"]);
   });
 
   it("uses one FAQ source for visible disclosures and matching schema", () => {

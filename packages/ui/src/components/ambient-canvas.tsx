@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type HTMLAttributes,
-} from "react";
+import { useEffect, useState, type HTMLAttributes } from "react";
 
-import {
-  isLowEndDevice,
-  prefersReducedMotion,
-} from "../glass/capabilities";
+import { isLowEndDevice, prefersReducedMotion } from "../glass/capabilities";
 
-export interface AmbientCanvasProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+export interface AmbientCanvasProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children"
+> {
   paused?: boolean;
 }
 

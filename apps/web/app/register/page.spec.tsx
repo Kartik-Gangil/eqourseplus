@@ -23,6 +23,7 @@ import VendorRegistrationPage, {
 
 const APPROVED_LINKS = [
   "/",
+  "/jobs",
   "/freelancers",
   "/vendors",
   "/about",
@@ -183,7 +184,7 @@ describe("FR-PUB-06 registration routes", () => {
           ),
           (link) => link.getAttribute("href"),
         ),
-      ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
+      ).toEqual(["/", "/freelancers", "/jobs", "/vendors", "/about"]);
       expect(
         container.querySelector("#site-navigation [aria-current]"),
       ).toBeNull();
