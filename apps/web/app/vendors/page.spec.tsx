@@ -141,7 +141,7 @@ describe("FR-PUB-04 vendors page", () => {
         ),
         (link) => link.getAttribute("href"),
       ),
-    ).toEqual(["/", "/freelancers", "/jobs", "/vendors", "/about"]);
+    ).toEqual(["/", "/freelancers", "/vendors", "/about"]);
   });
 
   it("uses one FAQ source for visible disclosures and matching schema", () => {

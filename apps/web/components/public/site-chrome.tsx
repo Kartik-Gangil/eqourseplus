@@ -85,13 +85,6 @@ export function SiteNavigation({ page }: SiteNavigationProps) {
               </a>
               <a
                 className="home-nav-link"
-                href="/jobs"
-                aria-current={page === "jobs" ? "page" : undefined}
-              >
-                Jobs
-              </a>
-              <a
-                className="home-nav-link"
                 href="/vendors"
                 aria-current={page === "vendors" ? "page" : undefined}
               >
@@ -139,6 +132,10 @@ export function SiteFooter({ homeRegion = false }: SiteFooterProps) {
           aria-label="Visit eQOURSE"
         >
           Visit eQOURSE
+          <ArrowMark />
+        </a>
+        <a className="home-footer-link" href="/jobs">
+          Jobs
           <ArrowMark />
         </a>
       </div>

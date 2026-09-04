@@ -1,13 +1,13 @@
 export const RESOLVING_ROUTES = [
   "/",
   "/freelancers",
-  "/jobs",
   "/vendors",
   "/about",
 ] as const;
 
 export const EXCLUDED_ROUTES = [
   "/design-system",
+  "/jobs",
   "/login",
   "/register",
   "/register/freelancer",

@@ -24,4 +24,11 @@ describe("FR-PUB-02 job detail", () => {
 
     expect(metadata.alternates?.canonical).toBe(`/jobs/${job.slug}`);
   });
+
+  it("sets page metadata to noindex", async () => {
+    const job = getJobs()[0]!;
+    const metadata = await generateMetadata({ params: { slug: job.slug } });
+
+    expect(metadata.robots).toMatchObject({ index: false });
+  });
 });

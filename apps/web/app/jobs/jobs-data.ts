@@ -1,3 +1,5 @@
+import { PLATFORM_ORGANIZATION_ID } from "../site-structured-data";
+
 export type SeedJob = {
   slug: string;
   title: string;
@@ -96,6 +98,7 @@ export function getJobPostingStructuredData(job: SeedJob) {
     validThrough: job.validThrough,
     employmentType: "CONTRACTOR",
     hiringOrganization: {
+      "@id": PLATFORM_ORGANIZATION_ID,
       "@type": "Organization",
       name: "eQOURSE+",
       sameAs: "https://plus.eqourse.com/",

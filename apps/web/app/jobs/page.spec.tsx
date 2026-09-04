@@ -1,11 +1,15 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import JobsPage from "./page";
+import JobsPage, { metadata } from "./page";
 
 afterEach(cleanup);
 
 describe("FR-PUB-02 jobs listing", () => {
+  it("sets page metadata to noindex", () => {
+    expect(metadata.robots).toMatchObject({ index: false });
+  });
+
   it("renders an SSR-friendly jobs heading, filters, and seeded job links", async () => {
     render(await JobsPage({ searchParams: {} }));
 
