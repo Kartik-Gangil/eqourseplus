@@ -29,6 +29,9 @@ export async function generateMetadata({
   return {
     title: `${job.title} | eQOURSE+`,
     description: job.description,
+    robots: {
+      index: false,
+    },
     alternates: {
       canonical: `/jobs/${job.slug}`,
       languages: { en: `/jobs/${job.slug}`, "x-default": `/jobs/${job.slug}` },

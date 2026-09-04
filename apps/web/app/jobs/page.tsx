@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "Jobs for Verified Talent | eQOURSE+",
   description:
     "Explore open project work across AI data services, content services, and tutoring at eQOURSE+.",
+  robots: {
+    index: false,
+  },
   alternates: {
     canonical: "/jobs",
     languages: { en: "/jobs", "x-default": "/jobs" },

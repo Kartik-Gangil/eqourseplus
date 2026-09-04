@@ -278,6 +278,25 @@ body {
   min-height: 3rem;
 }
 
+@media (min-width: 48rem) and (max-width: 63.999rem) {
+  .home-nav-wrap .eq-glass-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: stretch;
+  }
+
+  .home-nav-links {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    border-top: 1px solid hsl(var(--border) / 0.65);
+  }
+}
+
 .home-hero {
   position: relative;
   z-index: 1;

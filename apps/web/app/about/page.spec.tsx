@@ -107,8 +107,8 @@ describe("FR-PUB-05 about page", () => {
         href.startsWith("#") ||
           [
             "/",
-        "/freelancers",
-        "/jobs",
+            "/freelancers",
+            "/jobs",
             "/vendors",
             "/about",
             "https://www.eqourse.com/",
