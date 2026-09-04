@@ -22,7 +22,7 @@ FR-PUB-02 metadata follow-up (2026-09-04): both seeded job routes now declare pa
 
 ## Phase 2 — Freelancer onboarding (wk 5–8)
 - [x] FR-REG-01 freelancer sign-up (2026-08-05) — Dedicated dual-OTP API, sparse-unique migration, device-review flags, and two-step `/register/freelancer` browser flow; 274 tests green.
-- [ ] FR-REG-02A
+- [ ] FR-REG-02A — Part 2a delivered 2026-09-04: authenticated API session-read endpoint and real-Mongo `profileState` mapping; FR remains open pending the part 2b web cookie transport.
 - [ ] FR-REG-02  - [ ] FR-REG-03  - [ ] FR-REG-04  - [ ] FR-REG-05
 - [ ] FR-REG-06  - [ ] FR-REG-07  - [ ] FR-REG-11  - [ ] FR-REG-12  - [ ] FR-REG-14
 ## Phase 3 — Test gate (wk 9–11)
