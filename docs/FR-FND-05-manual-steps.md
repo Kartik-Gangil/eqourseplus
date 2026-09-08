@@ -8,8 +8,11 @@ the FR-FND-05 API pipeline. They do not deploy to Vercel or Utho.
 **Run every step in Sections 1–6 while the PR is still open, before merging it
 to `main`.** The staging workflow fires on the merge itself, so Artifact
 Registry, both service accounts, Workload Identity Federation, `MONGODB_URI`,
-`JWT_SECRET`, the GitHub repository variables, and the protected `production`
-environment must already exist.
+`JWT_SECRET`, the per-service `CORS_ORIGINS` values, the GitHub repository
+variables, and the protected `production` environment must already exist. Before
+enabling real email delivery, also complete Section 10 without changing any
+existing company-mail DNS record. Before enabling real SMS delivery, also
+complete Section 11 and its controlled first-send HTTPS verification.
 
 Run the following commands in PowerShell from a terminal where `gcloud` is
 authenticated as a project IAM administrator. The GitHub CLI commands also
@@ -155,7 +158,23 @@ Cloud Run connection using the documented temporary `0.0.0.0/0` decision,
 SCRAM least-privilege credentials, and TLS. Never apply that rule to a cluster
 holding real user data.
 
-## 5. Set the non-secret GitHub repository variables
+## 5. Confirm the non-secret runtime configuration and set repository variables
+
+`CORS_ORIGINS` is not a Secret Manager secret. It is required runtime
+configuration that the workflow sets directly on each service with
+`--set-env-vars`:
+
+- `eqplus-api-staging`: `http://localhost:3000`
+- `eqplus-api`: `https://plus.eqourse.com`
+
+Staging is deliberately limited to the local web origin. Vercel preview URLs
+cannot make browser-originated calls to the staging API until a stable preview
+origin exists. The browser-originated registration and OTP-request endpoints
+therefore cannot be exercised from per-branch previews.
+
+`--set-env-vars` replaces the service's complete plain environment-variable
+group. Before adding another plain variable outside this workflow, update the
+workflow's complete list so a later deployment cannot remove it silently.
 
 Get the full provider resource name and store it with the deploy service-account
 email as GitHub repository variables:
@@ -222,9 +241,11 @@ reviewer. Only then merge the PR.
 
 The staging job builds and pushes the commit-SHA image, deploys
 `eqplus-api-staging` in `asia-south1` with `min-instances=0`, public invocation,
+`CORS_ORIGINS=http://localhost:3000` as non-secret runtime configuration,
 Secret Manager injection for `MONGODB_URI` and `JWT_SECRET`, and HTTP
 startup/liveness probes. It then calls `/health` and fails if the endpoint does
-not return a successful response.
+not return a successful response. Production receives
+`CORS_ORIGINS=https://plus.eqourse.com` only after manual approval.
 
 After that succeeds, the `Deploy production API` job must be visibly waiting
 for approval. Approve it only when you intend to promote that exact commit image.
@@ -247,3 +268,175 @@ gcloud run services describe eqplus-api-staging `
 ```
 
 The request must return HTTP 200 with `{"status":"ok"}`.
+
+## 9. Configure the Vercel Production web environment
+
+The `eqourseplus-web` Vercel project requires all three of these variables in
+the **Production** environment:
+
+| Variable | Production value | Read by | Purpose |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | The Cloud Run production URL | Browser code, inlined at build time | Used only for direct `register/request` and `otp/request` calls so the API receives the real client's device-fingerprint inputs |
+| `API_URL` | The same Cloud Run production URL | Next.js server only, at runtime | `apiFetch` calls from every `/api/auth/*` Route Handler |
+| `APP_URL` | `https://plus.eqourse.com` | Next.js server only, at runtime | Exact-origin allow-list for CSRF validation |
+
+Create these as Vercel **Config**, not Secret, values. They are public URLs, and
+`NEXT_PUBLIC_*` values are intentionally compiled into the browser bundle. Keep
+the localhost values in `.env.example` as development defaults; production
+values live in the Vercel Production environment.
+
+Enter every value with **no trailing slash**. The API's `CORS_ORIGINS` check and
+the web CSRF check compare exact origins, so a trailing slash fails the match.
+
+`NEXT_PUBLIC_*` variables are inlined at build time. Adding
+`NEXT_PUBLIC_API_URL` and choosing Vercel's **Redeploy** action on an existing
+deployment does not re-inline the value, even when the build cache is disabled.
+A fresh git-triggered build is required. `API_URL` and `APP_URL` are read at
+runtime and take effect immediately.
+
+## 10. Configure Resend email delivery
+
+SPEC.md Section 20 approves Resend/SES for email delivery. The API deliberately
+uses the in-memory sandbox mailer unless `MAILER_PROVIDER=resend` is configured.
+The deployment workflow keeps staging on `sandbox` and configures production as
+`resend`; production therefore fails at startup if its sender or API key is
+missing instead of silently claiming to send an OTP.
+
+### Create and verify the provider account
+
+1. Create the Resend account under the company-owned login and enable account
+   security controls offered by the provider.
+2. In Resend, add the sending domain or dedicated sending subdomain that will be
+   used by `OTP_EMAIL_FROM`.
+3. Copy each DNS host, type and value from Resend exactly. Do not copy an API key
+   into DNS, this repository, a shell history, a ticket, or chat.
+4. Wait until Resend reports the domain verified before enabling the production
+   provider.
+
+### Add SPF, DKIM and DMARC safely in GoDaddy
+
+The authoritative `eqourse.com` DNS zone is at GoDaddy. It is **add-only** and
+already hosts the Google Workspace MX records for live company mail. Add the
+provider-verification records; never replace, edit, or delete the Google
+Workspace MX records or any unrelated existing record. A mistaken replacement
+can stop company email. If a requested host already exists or GoDaddy proposes
+replacing a record, stop and investigate instead of confirming the change.
+
+Add or confirm all three authentication controls:
+
+- **SPF:** add the exact Resend-supplied TXT record on its requested sending host.
+  A hostname must not publish two SPF policies; if that host already has an SPF
+  record, stop and resolve the collision rather than replacing it. A dedicated
+  sending subdomain avoids modifying the root domain's mail policy.
+- **DKIM:** add every Resend-supplied DKIM TXT or CNAME record with the exact
+  selector, host and value. Do not reuse or replace Google Workspace selectors.
+- **DMARC:** confirm that the organizational/sending domain has one DMARC TXT
+  policy. If none exists, add a deliberate initial monitoring policy such as
+  `v=DMARC1; p=none`; if one already exists, keep it and confirm alignment rather
+  than creating a second policy. Tightening enforcement is a separate mail-admin
+  decision after reviewing reports.
+
+After propagation, verify SPF, DKIM and DMARC independently and confirm Resend's
+domain page is green. Send a provider test only to a controlled company inbox;
+do not use a real user's address for setup testing.
+
+### Store runtime configuration
+
+Create the Resend API key as a GCP Secret Manager secret by pasting only the raw
+value at the secure prompt:
+
+```powershell
+gcloud secrets create RESEND_API_KEY --replication-policy=automatic --data-file=- `
+  --project=$ProjectId
+
+gcloud secrets add-iam-policy-binding RESEND_API_KEY `
+  --project=$ProjectId `
+  --member="serviceAccount:$RuntimeServiceAccount" `
+  --role="roles/secretmanager.secretAccessor"
+```
+
+Store the verified sender as a non-secret GitHub repository variable. Use a
+verified address without a comma in its display name because Cloud Run parses
+comma-separated environment assignments:
+
+```powershell
+gh variable set OTP_EMAIL_FROM `
+  --repo $GitHubRepository `
+  --body "verified-sender-address-from-resend"
+
+gcloud secrets describe RESEND_API_KEY --project=$ProjectId
+gh variable get OTP_EMAIL_FROM --repo $GitHubRepository
+```
+
+The production deployment injects `RESEND_API_KEY` from Secret Manager and sets
+`MAILER_PROVIDER=resend` plus `OTP_EMAIL_FROM`. Staging, local development and CI
+remain on the sandbox adapter and require no provider credentials.
+
+## 11. Configure AmazeSMS OTP delivery
+
+SPEC.md Section 20 approves AmazeSMS for SMS delivery. The API defaults to the
+in-memory SMS sandbox unless `SMS_PROVIDER=amazesms` is selected. Local
+development, CI and staging stay on `sandbox`; production fails at startup if
+any required AmazeSMS configuration is absent.
+
+### Store the secret and plain configuration
+
+The six provider values are:
+
+| Variable | Storage | Purpose |
+| --- | --- | --- |
+| `AMAZESMS_USER` | GitHub repository variable | AmazeSMS profile ID |
+| `AMAZESMS_AUTHKEY` | GCP Secret Manager | Provider authentication key |
+| `AMAZESMS_SENDER` | GitHub repository variable | Approved DLT sender/header ID |
+| `AMAZESMS_ENTITY_ID` | GitHub repository variable | Principal Entity ID |
+| `AMAZESMS_TEMPLATE_ID` | GitHub repository variable | Approved DLT template ID |
+| `SMS_OTP_TEMPLATE` | GitHub repository variable | Exact approved message text with one `{code}` placeholder |
+
+Create `AMAZESMS_AUTHKEY` by pasting only the raw key at the secure prompt, then
+grant the Cloud Run runtime identity access:
+
+```powershell
+gcloud secrets create AMAZESMS_AUTHKEY --replication-policy=automatic --data-file=- `
+  --project=$ProjectId
+
+gcloud secrets add-iam-policy-binding AMAZESMS_AUTHKEY `
+  --project=$ProjectId `
+  --member="serviceAccount:$RuntimeServiceAccount" `
+  --role="roles/secretmanager.secretAccessor"
+```
+
+Set the remaining values as ordinary GitHub repository variables. Use the
+currently approved Tutrain sender and template only for controlled testing; once
+the eQOURSE DLT template is approved, replace these configuration values with
+the approved `EQOURS` sender/template values without changing code.
+
+```powershell
+gh variable set AMAZESMS_USER --repo $GitHubRepository --body "provider-profile-id"
+gh variable set AMAZESMS_SENDER --repo $GitHubRepository --body "approved-sender-id"
+gh variable set AMAZESMS_ENTITY_ID --repo $GitHubRepository --body "approved-principal-entity-id"
+gh variable set AMAZESMS_TEMPLATE_ID --repo $GitHubRepository --body "approved-template-id"
+gh variable set SMS_OTP_TEMPLATE --repo $GitHubRepository --body "exact-approved-text-with-{code}"
+
+gcloud secrets describe AMAZESMS_AUTHKEY --project=$ProjectId
+```
+
+DLT matching is character-for-character. `SMS_OTP_TEMPLATE` must reproduce the
+approved provider template exactly, including capitalization, punctuation and
+spacing, and must contain exactly one `{code}` placeholder. Never add branding,
+expiry wording or other text in application code.
+
+### Verify HTTPS on the first real send
+
+The adapter always calls
+`https://amazesms.in/api/pushsms` and never falls back to plaintext HTTP. The
+only observation available before integration was that AmazeSMS terminated TLS
+and answered a parameterless request to a different endpoint; it did not prove
+that `/api/pushsms` works correctly over HTTPS.
+
+For the first real send, use a controlled company test number and confirm both
+that the HTTPS request returns provider success code `100` or `150` and that the
+expected SMS arrives. Inspect only sanitized application logs; never print the
+request URL, because its query string contains the authentication key, recipient
+and live OTP code. If the first real send does not work over HTTPS, **STOP and
+report the failure**. Never fall back to plaintext HTTP or work around TLS under
+any deadline.

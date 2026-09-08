@@ -3,11 +3,17 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { INestApplication } from "@nestjs/common";
+import {
+  ServiceUnavailableException,
+  type INestApplication,
+} from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   SandboxMailerAdapter,
   SandboxSmsAdapter,
+  type MailerAdapter,
+  type OtpDelivery,
+  type SmsAdapter,
   type SmsOtpDelivery,
 } from "@eqourse/adapters";
 import { BusinessUnit, ProfileState, Role } from "@eqourse/shared";
@@ -71,6 +77,34 @@ class MutableClock {
   }
 }
 
+class ControllableMailerAdapter implements MailerAdapter {
+  readonly sandbox = new SandboxMailerAdapter();
+  failure: Error | undefined;
+
+  get deliveries(): OtpDelivery[] {
+    return this.sandbox.deliveries;
+  }
+
+  async sendOtp(delivery: OtpDelivery): Promise<void> {
+    if (this.failure) throw this.failure;
+    await this.sandbox.sendOtp(delivery);
+  }
+}
+
+class ControllableSmsAdapter implements SmsAdapter {
+  readonly sandbox = new SandboxSmsAdapter(async () => undefined);
+  failure: Error | undefined;
+
+  get deliveries(): SmsOtpDelivery[] {
+    return this.sandbox.deliveries;
+  }
+
+  async sendOtp(delivery: SmsOtpDelivery): Promise<void> {
+    if (this.failure) throw this.failure;
+    await this.sandbox.sendOtp(delivery);
+  }
+}
+
 const require = createRequire(import.meta.url);
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const apiDirectory = path.resolve(testDirectory, "..");
@@ -80,8 +114,8 @@ describe("FR-REG-01 freelancer registration API", () => {
   let memoryServer: MongoMemoryServer;
   let migrationClient: mongo.MongoClient;
   let db: mongo.Db;
-  let mailer: SandboxMailerAdapter;
-  let sms: SandboxSmsAdapter;
+  let mailer: ControllableMailerAdapter;
+  let sms: ControllableSmsAdapter;
   let clock: MutableClock;
   let requestNumber = 0;
 
@@ -105,8 +139,8 @@ describe("FR-REG-01 freelancer registration API", () => {
     ({ client: migrationClient, db } = await migrateMongo.database.connect());
     await migrateMongo.up(db, migrationClient);
 
-    mailer = new SandboxMailerAdapter();
-    sms = new SandboxSmsAdapter(async () => undefined);
+    mailer = new ControllableMailerAdapter();
+    sms = new ControllableSmsAdapter();
     clock = new MutableClock();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(MAILER_ADAPTER)
@@ -128,7 +162,9 @@ describe("FR-REG-01 freelancer registration API", () => {
   beforeEach(async () => {
     await db.collection("users").deleteMany({});
     mailer.deliveries.length = 0;
+    mailer.failure = undefined;
     sms.deliveries.length = 0;
+    sms.failure = undefined;
     clock.reset();
   });
 
@@ -359,22 +395,23 @@ describe("FR-REG-01 freelancer registration API", () => {
     }).expect(429);
   });
 
-  it("retains the IP cap on registration verification across distinct identifiers", async () => {
+  it("allows distinct users to verify registrations from one web-server IP", async () => {
     const sharedIp = "203.0.113.182";
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      await post("/api/v1/auth/register/verify", {
-        email: `registration-spray-${attempt}@example.com`,
-        phone: `+9198765400${attempt.toString().padStart(2, "0")}`,
-        emailOtp: "000000",
-        phoneOtp: "000000",
-      }, sharedIp).expect(401);
+    const registrations = Array.from({ length: 6 }, (_, index) => ({
+      email: `registration-shared-ip-${index}@example.com`,
+      phone: `+9198765400${index.toString().padStart(2, "0")}`,
+      countryCode: "IN",
+    }));
+    for (const registration of registrations) {
+      await requestRegistration(registration);
     }
-    await post("/api/v1/auth/register/verify", {
-      email: "registration-spray-final@example.com",
-      phone: "+919876540099",
-      emailOtp: "000000",
-      phoneOtp: "000000",
-    }, sharedIp).expect(429);
+    for (const registration of registrations) {
+      await post("/api/v1/auth/register/verify", {
+        email: registration.email,
+        phone: registration.phone,
+        ...codesFor(registration.email, registration.phone),
+      }, sharedIp).expect(200);
+    }
   });
 
   it("retains the IP cap on registration requests across distinct identifiers", async () => {
@@ -587,5 +624,76 @@ describe("FR-REG-01 freelancer registration API", () => {
     await verifyRegistration(replacement);
     clock.advance(10 * 60 * 1000 + 1);
     await post("/api/v1/auth/register/request", { ...replacement, email: "attacker@example.com" }).expect(409);
+  });
+
+  it("pins the 10-minute lockout after email delivery fails", async () => {
+    mailer.failure = new ServiceUnavailableException({
+      statusCode: 503,
+      error: "Service Unavailable",
+      code: "EMAIL_DELIVERY_UNAVAILABLE",
+      message: "Email delivery is temporarily unavailable",
+    });
+
+    await post("/api/v1/auth/register/request", baseRegistration).expect(503);
+    const failedRecord = await db.collection("users").findOne({
+      email: baseRegistration.email,
+    });
+    expect(failedRecord).not.toBeNull();
+    expect(sms.deliveries).toHaveLength(0);
+
+    mailer.failure = undefined;
+    const immediateRetry = await post(
+      "/api/v1/auth/register/request",
+      baseRegistration,
+    ).expect(409);
+    expect(immediateRetry.body.code).toBe("REGISTRATION_CONFLICT");
+    expect(JSON.stringify(immediateRetry.body)).not.toContain(
+      baseRegistration.email,
+    );
+    expect(await db.collection("users").countDocuments()).toBe(1);
+
+    clock.advance(10 * 60 * 1000 + 1);
+    await requestRegistration(baseRegistration);
+    const reclaimedRecord = await db.collection("users").findOne({
+      email: baseRegistration.email,
+    });
+    expect(reclaimedRecord?._id).toEqual(failedRecord?._id);
+    expect(await db.collection("users").countDocuments()).toBe(1);
+  });
+
+  it("pins partial delivery and the 10-minute lockout after SMS delivery fails", async () => {
+    sms.failure = new ServiceUnavailableException({
+      statusCode: 503,
+      error: "Service Unavailable",
+      code: "SMS_DELIVERY_UNAVAILABLE",
+      message: "SMS delivery is temporarily unavailable",
+    });
+
+    await post("/api/v1/auth/register/request", baseRegistration).expect(503);
+    const failedRecord = await db.collection("users").findOne({
+      email: baseRegistration.email,
+    });
+    expect(failedRecord).not.toBeNull();
+    expect(mailer.deliveries).toHaveLength(1);
+    expect(sms.deliveries).toHaveLength(0);
+
+    sms.failure = undefined;
+    const immediateRetry = await post(
+      "/api/v1/auth/register/request",
+      baseRegistration,
+    ).expect(409);
+    expect(immediateRetry.body.code).toBe("REGISTRATION_CONFLICT");
+    expect(JSON.stringify(immediateRetry.body)).not.toContain(
+      baseRegistration.email,
+    );
+    expect(await db.collection("users").countDocuments()).toBe(1);
+
+    clock.advance(10 * 60 * 1000 + 1);
+    await requestRegistration(baseRegistration);
+    const reclaimedRecord = await db.collection("users").findOne({
+      email: baseRegistration.email,
+    });
+    expect(reclaimedRecord?._id).toEqual(failedRecord?._id);
+    expect(await db.collection("users").countDocuments()).toBe(1);
   });
 });
