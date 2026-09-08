@@ -70,10 +70,6 @@ export default function JobDetailPage({ params }: JobPageProps) {
               <dd>{job.workType}</dd>
             </div>
             <div>
-              <dt>Headcount</dt>
-              <dd>{job.headcount}</dd>
-            </div>
-            <div>
               <dt>Rate</dt>
               <dd>{job.rate}</dd>
             </div>

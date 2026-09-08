@@ -10,7 +10,6 @@ export type SeedJob = {
   skills: readonly string[];
   workType: "task" | "hourly" | "milestone";
   rate: string;
-  headcount: number;
   datePosted: string;
   validThrough: string;
   requiredTest: string;
@@ -29,7 +28,6 @@ export const seededJobs: readonly SeedJob[] = [
     skills: ["Annotation", "Response evaluation", "Written feedback"],
     workType: "task",
     rate: "Rate shared during project matching",
-    headcount: 12,
     datePosted: "2026-08-20",
     validThrough: "2026-10-31",
     requiredTest: "AI response evaluation",
@@ -46,7 +44,6 @@ export const seededJobs: readonly SeedJob[] = [
     skills: ["Curriculum", "Content review", "Quality assurance"],
     workType: "hourly",
     rate: "Rate shared during project matching",
-    headcount: 8,
     datePosted: "2026-08-22",
     validThrough: "2026-11-15",
     requiredTest: "Content review",
@@ -63,7 +60,6 @@ export const seededJobs: readonly SeedJob[] = [
     skills: ["NEET Biology", "Subject expertise", "Content review"],
     workType: "milestone",
     rate: "Rate shared during project matching",
-    headcount: 5,
     datePosted: "2026-08-25",
     validThrough: "2026-11-30",
     requiredTest: "NEET Biology",
@@ -97,12 +93,7 @@ export function getJobPostingStructuredData(job: SeedJob) {
     datePosted: job.datePosted,
     validThrough: job.validThrough,
     employmentType: "CONTRACTOR",
-    hiringOrganization: {
-      "@id": PLATFORM_ORGANIZATION_ID,
-      "@type": "Organization",
-      name: "eQOURSE+",
-      sameAs: "https://plus.eqourse.com/",
-    },
+    hiringOrganization: { "@id": PLATFORM_ORGANIZATION_ID },
     jobLocationType: "TELECOMMUTE",
     applicantLocationRequirements: {
       "@type": "Country",

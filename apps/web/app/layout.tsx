@@ -47,9 +47,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html
       lang="en"
@@ -58,7 +56,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitializerScript }} />
+        <script 
+        dangerouslySetInnerHTML={{ __html: themeInitializerScript }} 
+        />
       </head>
       <body>{children}</body>
     </html>
