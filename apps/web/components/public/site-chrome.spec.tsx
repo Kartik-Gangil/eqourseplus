@@ -84,6 +84,40 @@ describe("FR-PUB-02 public navigation placement", () => {
     expect(links).toHaveClass("is-open");
   });
 
+  it("keeps site chrome server-rendered and uses a dependency-free menu icon", () => {
+    const source = readFileSync(resolve(process.cwd(), "components/public/site-chrome.tsx"), "utf8");
+    render(<SiteNavigation page="home" />);
+
+    expect(source).not.toContain('"use client"');
+    expect(source).not.toContain("<Menu");
+    expect(screen.getByRole("button", { name: "Open navigation menu" }).querySelector("svg"))
+      .toBeInTheDocument();
+  });
+
+  it("gives the mobile toggle a 48px target and visible focus styling", () => {
+    expect(globalStyles).toMatch(/\.home-menu-toggle\s*\{[\s\S]*min-width:\s*3rem[\s\S]*min-height:\s*3rem/);
+    expect(globalStyles).toMatch(/\.home-menu-toggle:focus-visible\s*\{[\s\S]*outline:/);
+  });
+
+  it("keeps the expandable toggle in the navbar actions cell", () => {
+    render(<SiteNavigation page="home" />);
+
+    expect(
+      screen.getByRole("button", { name: "Open navigation menu" }).parentElement,
+    ).toHaveClass("home-nav-actions");
+  });
+
+  it("renders the mobile menu icon at the enlarged size", () => {
+    render(<SiteNavigation page="home" />);
+
+    expect(
+      screen.getByRole("button", { name: "Open navigation menu" }).querySelector("svg"),
+    ).toHaveAttribute("width", "28");
+    expect(
+      screen.getByRole("button", { name: "Open navigation menu" }).querySelector("svg"),
+    ).toHaveAttribute("height", "28");
+  });
+
   it("defines responsive grid and card radius rules for small screen sizes", () => {
     expect(globalStyles).toMatch(/@media\s*\(max-width:\s*47\.999rem\)/);
     expect(globalStyles).toMatch(/\.home-nav-links\s*>\s*:last-child:nth-child\(odd\)/);

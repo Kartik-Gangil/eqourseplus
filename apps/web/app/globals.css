@@ -339,6 +339,11 @@ margin: 0;
   background: hsl(var(--card) / 0.48);
 }
 
+.home-menu-toggle:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 @media (min-width: 48rem) and (max-width: 63.999rem) {
   .home-nav-wrap .eq-glass-nav {
     display: grid;

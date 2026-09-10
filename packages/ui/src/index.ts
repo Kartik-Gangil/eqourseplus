@@ -15,4 +15,3 @@ export * from "./glass/segmented-control";
 export * from "./theme/resolution";
 export * from "./theme/script";
 export * from "./tokens";
-export * from "lucide-react"

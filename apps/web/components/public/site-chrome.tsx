@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
-import { GlassNav, Menu } from "@eqourse/ui";
+import { GlassNav } from "@eqourse/ui";
 import { PublicThemeToggle } from "./public-client-islands";
+import { MobileNavigation } from "./mobile-navigation";
 
 export function ArrowMark() {
   return (
@@ -38,8 +35,6 @@ type SiteNavigationProps = {
 
 export function SiteNavigation({ page }: SiteNavigationProps) {
   const isHome = page === "home";
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return (
     <div className="home-nav-wrap">
       <GlassNav
@@ -56,11 +51,7 @@ export function SiteNavigation({ page }: SiteNavigationProps) {
         >
           eQOURSE<span aria-hidden="true" className=" font-bold !text-3xl">+</span>
         </a>
-        <div
-          id="site-navigation-links"
-          className={`home-nav-links${isMenuOpen ? " is-open" : ""}`}
-          onClick={() => setIsMenuOpen(false)}
-        >
+        <MobileNavigation actions={<PublicThemeToggle />}>
           {isHome ? (
             <>
               <a className="home-nav-link" href="#how-it-works">
@@ -107,20 +98,7 @@ export function SiteNavigation({ page }: SiteNavigationProps) {
               </a>
             </>
           )}
-        </div>
-        <div className="home-nav-actions">
-          <PublicThemeToggle />
-          <button
-            type="button"
-            className="home-menu-toggle"
-            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={isMenuOpen}
-            aria-controls="site-navigation-links"
-            onClick={() => setIsMenuOpen((open) => !open)}
-          >
-            <Menu aria-hidden="true" />
-          </button>
-        </div>
+        </MobileNavigation>
       </GlassNav>
     </div>
   );
