@@ -245,7 +245,10 @@ margin: 0;
 }
 
 .home-nav-wrap {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   width: min(100% - 2rem, 80rem);
   margin-inline: auto;
@@ -389,8 +392,8 @@ margin: 0;
 .home-eyebrow {
   margin: 0 0 1rem;
   color: hsl(var(--primary));
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -401,7 +404,7 @@ margin: 0;
   color: hsl(var(--foreground));
   font-family: var(--font-heading);
   font-size: clamp(3.25rem, 8.2vw, 7.25rem);
-  font-weight: 800;
+  font-weight: 400;
   letter-spacing: -0.065em;
   line-height: 0.96;
   text-wrap: balance;
@@ -445,8 +448,8 @@ margin: 0;
   gap: 0.75rem;
   margin: 0;
   color: hsl(var(--muted-foreground));
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -473,11 +476,20 @@ margin: 0;
   inset: 0;
   border: 1px solid hsl(var(--primary) / 0.18);
   border-radius: 50%;
+
+  animation:
+    orbit-rotate 18s linear infinite,
+    orbit-pulse 4s ease-in-out infinite;
+
+  transform-origin: center;
 }
 
 .home-orbit span:nth-child(2) {
   inset: 17%;
   border-color: hsl(var(--accent) / 0.24);
+
+  animation-duration: 14s, 5s;
+  animation-direction: reverse, alternate;
 }
 
 .home-orbit span:nth-child(3) {
@@ -485,6 +497,58 @@ margin: 0;
   border-width: 2px;
   border-color: hsl(var(--primary) / 0.4);
   box-shadow: var(--shadow-soft);
+
+  animation-duration: 10s, 3.5s;
+}
+
+/* Rotation */
+@keyframes orbit-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Subtle breathing effect */
+@keyframes orbit-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    scale: 1;
+  }
+
+  50% {
+    opacity: 1;
+    scale: 1.035;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .home-orbit span {
+    animation: none;
+  }
+}
+
+.home-orbit span::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  border-top-color: hsl(var(--primary) / 0.75);
+  pointer-events: none;
+}
+
+.home-orbit span:nth-child(2)::before {
+  border-top-color: hsl(var(--accent) / 0.8);
+}
+
+.home-orbit span:nth-child(3)::before {
+  border-top-color: hsl(var(--primary) / 0.9);
 }
 
 .home-section,
@@ -531,8 +595,8 @@ margin: 0;
   color: hsl(var(--foreground));
   font-family: var(--font-heading);
   font-size: clamp(2.25rem, 5vw, 4.5rem);
-  font-weight: 800;
-  letter-spacing: -0.05em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   line-height: 1.02;
   text-wrap: balance;
 }
@@ -562,8 +626,8 @@ margin: 0;
 }
 
 .home-trust-dot {
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.65rem;
+  height: 0.65rem;
   margin-inline: 0.4rem;
   border-radius: 50%;
   background: hsl(var(--primary));
@@ -1473,15 +1537,36 @@ margin: 0;
 
 @media (max-width: 47.75rem) {
   .home-nav-links {
-    display: none;
-  }
-
-  .home-nav-links.is-open {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
+    max-height: 0;
+    padding: 0;
+    border-top-color: transparent;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translateY(-0.5rem);
+    visibility: hidden;
+    transition:
+      max-height var(--motion-transform) var(--ease-standard),
+      padding var(--motion-micro) var(--ease-standard),
+      border-color var(--motion-micro) var(--ease-standard),
+      opacity var(--motion-micro) var(--ease-standard),
+      transform var(--motion-transform) var(--ease-standard),
+      visibility 0s linear var(--motion-transform);
+  }
+
+  .home-nav-links.is-open {
+    max-height: 24rem;
     padding: 10px;
+    border-top-color: hsl(var(--border) / 0.65);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+    transition-delay: 0s;
   }
 
   .home-nav-actions {
@@ -1564,6 +1649,7 @@ margin: 0;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .home-nav-links,
   .home-nav-link,
   .home-category-link,
   .home-freelancer-link,

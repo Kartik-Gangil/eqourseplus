@@ -75,7 +75,7 @@ export default function JobsPage({ searchParams }: JobsPageProps) {
                 Current opportunities
               </h2>
             </div>
-            <p>{jobs.length} opportunities shown</p>
+            <p>Explore available project work.</p>
           </div>
           <form className="jobs-filters" method="get" aria-label="Filter jobs">
             <label>
