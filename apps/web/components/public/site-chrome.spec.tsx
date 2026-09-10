@@ -88,8 +88,20 @@ describe("FR-PUB-02 public navigation placement", () => {
     expect(globalStyles).toMatch(/@media\s*\(max-width:\s*47\.999rem\)/);
     expect(globalStyles).toMatch(/\.home-nav-links\s*>\s*:last-child:nth-child\(odd\)/);
     expect(globalStyles).toMatch(/@media\s*\(max-width:\s*25rem\)/);
-    expect(globalStyles).toMatch(/\.home-nav-links\s*\{[\s\S]*display:\s*none/);
+    expect(globalStyles).toMatch(/\.home-nav-links\s*\{[\s\S]*max-height:\s*0/);
     expect(globalStyles).toMatch(/\.home-nav-links\.is-open\s*\{/);
+  });
+
+  it("animates the mobile navigation when opening and closing", () => {
+    expect(globalStyles).toMatch(
+      /\.home-nav-links\s*\{[\s\S]*max-height:\s*0[\s\S]*opacity:\s*0[\s\S]*transition:/,
+    );
+    expect(globalStyles).toMatch(
+      /\.home-nav-links\.is-open\s*\{[\s\S]*max-height:\s*\d+rem[\s\S]*opacity:\s*1/,
+    );
+    expect(globalStyles).toMatch(
+      /\.home-nav-links\.is-open\s*\{[\s\S]*visibility:\s*visible/,
+    );
   });
 });
 

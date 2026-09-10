@@ -97,8 +97,8 @@ function TrustMark() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="22"
-      height="22"
+      width="40"
+      height="40"
       fill="none"
       aria-hidden="true"
     >
@@ -137,9 +137,9 @@ export default function HomePage() {
           <span />
           <span />
         </div>
-        <div className="home-hero-content">
+        <div className="home-hero-content ">
           <p className="home-eyebrow">The talent platform by eQOURSE</p>
-          <h1 id="hero-title">
+          <h1 id="hero-title" className="!tracking-[.01em] ">
             Verified talent for work that has to ship.
           </h1>
           <p className="home-hero-copy">

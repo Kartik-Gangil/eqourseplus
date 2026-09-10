@@ -38,4 +38,4 @@ FR-PUB-02 metadata follow-up (2026-09-04): both seeded job routes now declare pa
 ## Phase 8 — AI + CRM
 - [ ] FR-QLT-06  - [ ] FR-CRM-01..04
 
-UI maintenance (2026-09-08, no FR): added an accessible mobile public-navbar menu toggle in `apps/web/components/public/site-chrome.tsx`. The toggle uses `aria-expanded`, `aria-controls`, and the Lucide Menu icon; mobile links collapse by default and open on button press. Coverage was added to `site-chrome.spec.tsx`.
+UI maintenance (2026-09-10, no FR): added an accessible mobile public-navbar menu toggle in `apps/web/components/public/site-chrome.tsx`. The toggle uses `aria-expanded`, `aria-controls`, and the Lucide Menu icon; mobile links collapse by default and open on button press with a reduced-motion-safe height, opacity, and transform transition. Coverage was added to `site-chrome.spec.tsx`.

@@ -54,7 +54,7 @@ export function SiteNavigation({ page }: SiteNavigationProps) {
           className="home-wordmark home-nav-link !items-baseline"
           href={isHome ? "#hero" : "/"}
         >
-          eQOURSE<span aria-hidden="true" className=" text-blue-600 font-bold !text-3xl">+</span>
+          eQOURSE<span aria-hidden="true" className=" font-bold !text-3xl">+</span>
         </a>
         <div
           id="site-navigation-links"
